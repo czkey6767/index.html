@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jazeera SEP Exam Drill</title>
+<style>
+  :root{
+    --bg:#0a1420;
+    --panel:#111f30;
+    --panel-2:#16283c;
+    --line:#22394f;
+    --text:#e9eef5;
+    --muted:#8ea3ba;
+    --amber:#f0a830;
+    --amber-dim:#7a5b1e;
+    --good:#48d597;
+    --good-dim:#123c2c;
+    --bad:#f2685c;
+    --bad-dim:#42201d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:18px 12px 48px;
+  }
+  .wrap{width:100%;max-width:560px;}
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:.02em;
+  }
+  .score{
+    color:var(--amber);
+    font-variant-numeric:tabular-nums;
+    font-weight:600;
+  }
+  .track{
+    height:6px;
+    background:var(--panel-2);
+    border-radius:3px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .fill{
+    height:100%;
+    background:var(--amber);
+    width:0%;
+    transition:width .35s ease;
+  }
+
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    color:var(--amber);
+    border:1px solid var(--amber-dim);
+    background:rgba(240,168,48,0.08);
+    padding:3px 9px;
+    border-radius:20px;
+    margin-bottom:14px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 20px;
+  }
+  .prompt{
+    font-size:19px;
+    line-height:1.4;
+    font-weight:600;
+    margin:0 0 18px;
+  }
+  .opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:13px 14px;
+    border-radius:10px;
+    font-size:15.5px;
+    margin-bottom:10px;
+    cursor:pointer;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .opt:hover{border-color:var(--amber-dim);}
+  .opt:active{transform:scale(0.995);}
+  .opt.correct{
+    background:var(--good-dim);
+    border-color:var(--good);
+    color:#d5fff0;
+  }
+  .opt.wrong{
+    background:var(--bad-dim);
+    border-color:var(--bad);
+    color:#ffe0dc;
+  }
+  .opt[disabled]{cursor:default;}
+
+  .explain{
+    margin-top:14px;
+    padding:14px 15px;
+    border-radius:10px;
+    background:var(--panel-2);
+    border-left:3px solid var(--amber);
+    font-size:14px;
+    line-height:1.5;
+    color:var(--muted);
+    display:none;
+  }
+  .explain b{color:var(--text);}
+
+  .nextrow{
+    margin-top:18px;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .btn{
+    background:var(--amber);
+    color:#231400;
+    border:none;
+    font-weight:700;
+    font-size:14.5px;
+    padding:11px 22px;
+    border-radius:9px;
+    cursor:pointer;
+    display:none;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--amber);
+    border:1px solid var(--amber-dim);
+  }
+
+  .done{display:none;text-align:center;}
+  .done h2{font-size:26px;margin-bottom:2px;}
+  .done .big{font-size:52px;font-weight:800;color:var(--amber);margin:14px 0 4px;}
+  .done p{color:var(--muted);font-size:14.5px;}
+  .missed{
+    text-align:left;
+    margin-top:24px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+  .missed h3{font-size:14px;color:var(--muted);text-transform:none;margin-bottom:10px;}
+  .missed-item{
+    font-size:14px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .missed-item b{color:var(--good);}
+  .actions{margin-top:22px;display:flex;gap:10px;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <span id="qcount">Question 1 / 96</span>
+    <span class="score">Score: <span id="scoreval">0</span></span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+
+  <div id="quizArea">
+    <span class="tag" id="topicTag">Standard Callouts</span>
+    <div class="card">
+      <p class="prompt" id="prompt">Loading…</p>
+      <div id="options"></div>
+      <div class="explain" id="explain"></div>
+      <div class="nextrow">
+        <button class="btn" id="nextBtn">Next Question</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="done" id="doneArea">
+    <h2>Drill complete</h2>
+    <div class="big" id="finalScore">0 / 96</div>
+    <p>Focus your last review on the missed ones below.</p>
+    <div class="missed" id="missedList"></div>
+    <div class="actions">
+      <button class="btn" id="restartBtn">Restart Full Drill</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const QUESTIONS = [
+// ROUND 1
+{t:"General & Human Factors", q:"What does the SEP Manual stand for?", o:["Safety Equipment Procedures","Safety and Emergency Procedures","Standard Equipment Procedures","Standard Emergency Plans"], c:1, e:"Confirmed on your manual's title page."},
+{t:"General & Human Factors", q:"What year did Jazeera Airways begin flight operations?", o:["2000","2003","2005","2010"], c:2, e:"Founded 2004, first commercial flights in 2005."},
+{t:"General & Human Factors", q:"What is the primary regulatory body for aviation in Kuwait?", o:["ICAO","DGCA","FAA","IATA"], c:1, e:"Matches your OM-A's AOC number 'DGCA/JZR/03-2004'."},
+{t:"General & Human Factors", q:"Which legislation governs aircrew in Kuwait?", o:["FAA Rules","DGCA Safety Regulations","KCASR","ICAO Guidelines"], c:2, e:"Kuwait Civil Aviation Safety Regulations."},
+{t:"General & Human Factors", q:"What does hypoxia primarily affect?", o:["Vision and judgment","Hearing ability","Balance and coordination","Skin sensitivity"], c:0, e:"Brain function degrades first — vision, judgment, cognition."},
+{t:"General & Human Factors", q:"What altitude range is cabin pressure maintained during flight?", o:["2,000–4,000 ft","6,000–8,000 ft","10,000–12,000 ft","14,000–16,000 ft"], c:1, e:"Standard pressurized cabin altitude."},
+{t:"General & Human Factors", q:"What is the oxygen level in the atmosphere?", o:["78%","21%","15%","10%"], c:1, e:"Nitrogen is ~78%, oxygen ~21%."},
+{t:"General & Human Factors", q:"What is the maximum validity of the Crew Member Certificate (CMC)?", o:["1 year","2 years","3 years","5 years"], c:0, e:"Cabin crew recurrent training/certification is annual — confirm against your own training record."},
+{t:"General & Human Factors", q:"What should a cabin crew member do if an equipment failure is detected?", o:["Fix it immediately","Report it to the captain","Ignore it until after the flight","Record it in the logbook after landing"], c:1, e:"Report up the chain: CCM → SCCM → PIC."},
+{t:"General & Human Factors", q:"What are the symptoms of decompression sickness?", o:["Joint pain, dizziness, difficulty breathing","Fatigue, vomiting, and sweating","Fever, headache, and nausea","Cough, chills, and body aches"], c:0, e:"Classic 'the bends' symptoms."},
+{t:"General & Human Factors", q:"What is the sterile cockpit rule?", o:["Silence in the cabin during critical phases of flight","No non-essential communication with the cockpit during critical phases","Pilots cannot leave the cockpit","Only emergency calls are allowed during flight"], c:1, e:"Confirmed word-for-word in your Briefing Questionnaire."},
+{t:"General & Human Factors", q:"What is the minimum number of cabin crew required on an A320?", o:["2","3","4","5"], c:2, e:"180 seats ÷ 50 = 4, matching SCCM/R1/R4/L4 positions on your EEL charts."},
+{t:"General & Human Factors", q:"Which phase of flight is NOT considered critical?", o:["Take-off","Initial climb","Cruise","Landing"], c:2, e:"Your Briefing Questionnaire's critical phase list excludes cruise."},
+{t:"Passenger Handling", q:"What should be briefed to passengers in an emergency exit row?", o:["Location of seatbelts","How to operate the exit","Instructions for safety demonstrations","Pre-landing announcements"], c:1, e:"ABP briefing focuses on exit operation."},
+{t:"Passenger Handling", q:"How should safety demonstrations be conducted?", o:["After take-off","During boarding","Once all passengers are seated","Before any announcements"], c:2, e:"Demo happens once boarding is complete and everyone is seated."},
+{t:"Passenger Handling", q:"Which passengers need individual pre-flight briefings?", o:["Pregnant women","Unaccompanied minors","Passengers with disabilities","Both b and c"], c:3, e:"UMs and PWD/ABP both require individual briefings."},
+{t:"Passenger Handling", q:"How many infants can a single adult travel with?", o:["1","2","3","Unlimited"], c:0, e:"One infant per adult — each adult can only secure one."},
+{t:"Passenger Handling", q:"Who conducts pre-flight safety briefings with the crew?", o:["Captain","SCCM","Ground staff","First officer"], c:1, e:"SCCM leads the crew briefing."},
+{t:"Passenger Handling", q:"What is the purpose of an Over-Wing Exit Briefing Card?", o:["To show safety instructions to passengers in multiple languages","To guide the crew during emergencies","To list safety equipment locations","To explain pilot responsibilities"], c:0, e:"Used for ABP who may not understand the verbal briefing language."},
+{t:"Fire Fighting", q:"Which class of fire involves electrical equipment?", o:["Class A","Class B","Class C","Class D"], c:2, e:"A=ordinary combustibles, B=flammable liquids, C=electrical, D=metals."},
+{t:"Fire Fighting", q:"What should be used to fight a Class C fire?", o:["Water","Halon extinguisher","Sand","Blanket"], c:1, e:"Never use water on electrical fires."},
+{t:"Fire Fighting", q:"What is the role of the assistant during a fire?", o:["Extinguishes the fire","Provides backup and moves passengers","Reports fire severity to the cockpit","Secures galley areas"], c:1, e:"Standard 2-person firefighting team roles."},
+{t:"Fire Fighting", q:"What should you check before opening an overhead bin during a fire?", o:["Passenger clearance","Heat intensity using the back of your hand","Contents of the bin","Nearby exits"], c:1, e:"Standard technique before opening any fire-involved compartment."},
+{t:"Human Factors", q:"What is Clear Air Turbulence (CAT)?", o:["Turbulence near mountains","Turbulence caused by high winds during take-off","Unexpected turbulence in clear skies","Turbulence during severe storms"], c:2, e:"No visual warning — often near jet streams."},
+{t:"Decompression", q:"What is the first action during decompression?", o:["Help passengers with oxygen masks","Secure yourself and grab an oxygen mask","Check lavatories","Contact the captain"], c:1, e:"Secure your own oxygen first, always."},
+{t:"Decompression", q:"At what cabin altitude do oxygen masks automatically deploy?", o:["10,000 ft","12,000 ft","14,000 ft","16,000 ft"], c:2, e:"14,000 ft cabin altitude triggers auto-deployment on the A320."},
+{t:"Evacuation", q:"What command is used during evacuation at the slide?", o:["\"Get out quickly!\"","\"Leave your belongings!\"","\"Jump and slide!\"","\"Find another exit!\""], c:2, e:"Standard command at the slide."},
+{t:"Fire Fighting", q:"What equipment is necessary for a lithium battery fire?", o:["Halon extinguisher and water","Brimstone fire prevention bag","Fire axe and gloves","Oxygen cylinders"], c:1, e:"The Brimstone Bag (BSB) is listed on every one of your EEL charts."},
+{t:"Human Factors", q:"What should crew members do to avoid decompression sickness?", o:["Avoid heavy smoking and alcohol before flights","Drink fizzy drinks during flights","Stay seated during turbulence","Wear oxygen masks throughout the flight"], c:0, e:"Both increase DCS risk factors."},
+{t:"Fire Fighting", q:"Which class of fire cannot be extinguished using Halon?", o:["Class A","Class B","Class C","Class D"], c:3, e:"Combustible metals need specialized dry powder agents."},
+
+// ROUND 2 — Standard Callouts
+{t:"Standard Callouts", q:"What exact phrase does the SCCM use to check the PA system before departure?", o:["\"Forward PA check, is it loud & clear?\"","\"Interphone check, am I loud and clear?\"","\"Cabin Crew take your positions\"","\"Attention all crew members\""], c:0, e:"Standard Callout table (2.26), item 1."},
+{t:"Standard Callouts", q:"How does a CCM acknowledge an interphone check?", o:["\"Received and understood\"","\"Loud and clear\"","\"Confirmed, thank you\"","\"Copy that\""], c:1, e:"Standard Callout table, item 2."},
+{t:"Standard Callouts", q:"What callout does the SCCM give to send crew to boarding positions?", o:["\"Cabin Crew take your positions for boarding\"","\"All ground staff to leave the aircraft\"","\"Cabin ready\"","\"Cabin Crew be seated\""], c:0, e:"Standard Callout item 5."},
+{t:"Standard Callouts", q:"What callout confirms all passengers are onboard?", o:["\"Cabin ready\"","\"Cabin Crew, all passengers onboard\"","\"Boarding complete, arm doors\"","\"All ground staff clear\""], c:1, e:"Standard Callout item 6."},
+{t:"Standard Callouts", q:"What is the SCCM callout as ground staff leave before departure?", o:["\"Cabin crew ARM all doors and cross check\"","\"All ground staff to leave the aircraft, Cabin Crew prepare for departure\"","\"Cabin ready\"","\"Doors to automatic\""], c:1, e:"Standard Callout item 7."},
+{t:"Standard Callouts", q:"What is announced right after the doors are closed, instructing crew to arm doors?", o:["\"Cabin ready\"","\"Cabin crew ARM all doors and cross check\"","\"Attention crew at stations\"","\"Doors disarmed\""], c:1, e:"Standard Callout item 8."},
+{t:"Standard Callouts", q:"On short flights, how early may the captain clear cabin crew for service?", o:["As early as 5,000 ft","Only above 10,000 ft","Only after top of climb","Immediately after takeoff"], c:0, e:"Confirmed in both SEP and Handout Crew Communication section."},
+{t:"Standard Callouts", q:"What marks the end of sterile cockpit after takeoff?", o:["Landing gear retraction","The \"Clear for service\" call / seat belt sign recycle","Reaching cruise altitude","Captain's PA welcome announcement"], c:1, e:"Noted explicitly on the callout table."},
+{t:"Standard Callouts", q:"At what altitude does the cockpit call SCCM for \"Cabin Secure\" before landing?", o:["10,000 ft (AAL)","5,000 ft","18,000 ft","2,500 ft"], c:0, e:"Confirmed in SEP + Handout crew communication table."},
+{t:"Standard Callouts", q:"What is the standard callout at landing gear selection during final approach?", o:["\"Cabin Crew be seated for landing\"","\"Doors to manual\"","\"Final safety check complete\"","\"Prepare for touchdown\""], c:0, e:"Standard Callout item 17."},
+{t:"Standard Callouts", q:"What is the exact rapid deplaning command?", o:["\"Evacuate, Evacuate\"","\"Attention Cabin Crew, Rapid Deplane, Rapid Deplane\"","\"Leave everything, remove shoes\"","\"Heads down, stay down\""], c:1, e:"Abnormal Situation table, item 1."},
+{t:"Standard Callouts", q:"What callout is given for anticipated turbulence?", o:["\"Cabin crew take your seats due turbulence\"","\"Brace, brace\"","\"All passengers fasten seat belt immediately\"","\"Secure the cabin now\""], c:0, e:"Abnormal Situation table, item 2."},
+{t:"Standard Callouts", q:"What callout is given for UNanticipated turbulence?", o:["\"Cabin crew take your seats due turbulence\"","\"All passengers and crew to fasten seat belt immediately\"","\"Brace for impact\"","\"Turbulence check complete\""], c:1, e:"Abnormal Situation table, item 3."},
+
+// Decompression
+{t:"Decompression", q:"As the aircraft climbs, what happens to the outflow valves?", o:["They open fully","They close","They cycle every minute","They are manually locked"], c:1, e:"They close to build cabin pressure to 6,000–8,000 ft."},
+{t:"Decompression", q:"What term describes the difference between cabin altitude and external flight altitude?", o:["Pressure differential","Cabin gradient","Altitude variance","Barometric split"], c:0, e:"Directly defined in section 3.19.2."},
+{t:"Decompression", q:"Which of these is NOT a listed sign of rapid/explosive decompression?", o:["Loud bang or thump","Cloud of fog/misting","Gradual ear popping over several minutes","Rush of air"], c:2, e:"That's a sign of SLOW decompression, not rapid."},
+{t:"Decompression", q:"What is the cabin crew's first priority during decompression?", o:["Assisting the nearest passenger","Their own personal safety / donning nearest oxygen mask","Contacting the captain","Checking the lavatories"], c:1, e:"Section 3.19.5 states this explicitly."},
+{t:"Decompression", q:"What must crew remove during decompression to communicate clearly?", o:["Headsets","Name badges","Face masks/face coverings/face shields","Jackets"], c:2, e:"Explicitly stated in section 3.19.5."},
+{t:"Decompression", q:"What phrase does the deck crew announce when an emergency descent is established?", o:["\"Emergency Descent, Emergency Descent\"","\"Brace, Brace\"","\"Cabin Crew, Descend Now\"","\"Oxygen On, Oxygen On\""], c:0, e:"Section 3.19.5.1, confirmed in Handout too."},
+{t:"Decompression", q:"What is announced when the aircraft reaches a safe altitude after decompression?", o:["\"Normal operations resumed\"","\"We have reached a safe altitude; Cabin Crew and Passengers may remove your Oxygen Mask\"","\"Cabin crew, stand down\"","\"All clear, resume service\""], c:1, e:"Section 3.19.5.2."},
+
+// Evacuation
+{t:"Evacuation", q:"Which is a listed trigger allowing cabin crew to initiate evacuation without the captain?", o:["Passenger complaint","Minor turbulence","Dense smoke in the cabin","Delayed meal service"], c:2, e:"Section 3.20.3.5 also lists uncontrollable fire, structural damage, ditching, and comms loss."},
+{t:"Evacuation", q:"Evacuation commands used by cabin crew should be all of the following EXCEPT:", o:["Assertive","Long and detailed","Loud","Well-paced"], c:1, e:"Section 3.20.3.3 — commands should be SHORT."},
+{t:"Evacuation", q:"In an unplanned emergency WITH NO TIME, what is the initial brace command?", o:["\"Brace, Brace\"","\"Heads Down, Stay Down\"","\"Evacuate, Evacuate\"","\"Attention Crew at Stations\""], c:1, e:"Section 3.20.4.1.1, confirmed in the Handout too."},
+{t:"Evacuation", q:"Once the aircraft stops in a no-time emergency, what command does the captain give next?", o:["\"Evacuate, Evacuate\"","\"Attention Crew At Stations\"","\"Cabin Ready\"","\"Purser to Cockpit\""], c:1, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"What is the exact evacuation command from the captain via EVAC/PA?", o:["\"Get Out Now\"","\"Evacuate - Evacuate\"","\"Jump and Slide\"","\"Emergency, Emergency\""], c:1, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"If evacuation is not required after all, what command does the captain give?", o:["\"Stand down\"","\"Cabin Crew and Passengers - Remain Seated\"","\"All clear\"","\"Resume normal operations\""], c:1, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"While opening the exit during evacuation, what does the cabin crew shout?", o:["\"Move fast!\"","\"Seatbelts Off, Get Out\"","\"Everyone out now!\"","\"Follow me\""], c:1, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"What command discourages passengers from grabbing baggage during evacuation?", o:["\"No bags allowed\"","\"Leave Everything, Remove Shoes\"","\"Bags to the front\"","\"Drop and go\""], c:1, e:"Baggage at the door has historically caused pile-ups."},
+{t:"Evacuation", q:"What command directs passengers to the exit once the slide is inflated?", o:["\"Come This Way\"","\"Exit is ready\"","\"Move to door\"","\"Slide is set\""], c:0, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"What command holds passengers back until the slide is fully inflated?", o:["\"Wait there\"","\"Stand Back\"","\"Hold position\"","\"Stay seated\""], c:1, e:"Section 3.20.4.1.1, Exit Management."},
+{t:"Evacuation", q:"Which commands manage passengers at the BOTTOM of the slide?", o:["\"Stay at the Bottom\" / \"Help People Off\" / \"Send Them Away\"","\"Run Away Fast\"","\"Clear the Runway\"","\"Wait for Instructions\""], c:0, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"If an exit becomes unusable during evacuation, what 3 actions should crew take?", o:["Ignore it and continue","Stop, Block, Re-direct","Report and wait","Close and lock"], c:1, e:"Section 3.20.4.1.1."},
+{t:"Evacuation", q:"What phrase alerts cabin crew from the flight deck that a briefing is coming?", o:["\"Cabin Crew, Standby\"","\"Purser to Cockpit Please\"","\"Attention All Crew\"","\"SCCM to Flight Deck Now\""], c:1, e:"Section 3.20.4.2.1."},
+{t:"Evacuation", q:"In the NITS briefing, what does \"N\" stand for?", o:["Notification","Nature (of the emergency)","Number (of passengers)","Navigation"], c:1, e:"Section 3.20.4.2.2."},
+{t:"Evacuation", q:"What does the \"T\" in NITS stand for?", o:["Type","Time (available for landing/preparation)","Threat level","Turbulence"], c:1, e:"Also used to synchronize watches."},
+
+// Security
+{t:"Security", q:"What phrase alerts the captain discreetly during a hijack?", o:["\"Emergency in the cabin\"","\"Captain, I Must Come To The Flight Deck Immediately\"","\"Code Red, Code Red\"","\"Security breach, advise\""], c:1, e:"Section 3.21.1.2, confirmed identically in your Briefing Questionnaire."},
+{t:"Security", q:"What transponder code should be selected in a hijack, if possible?", o:["7500","7700","7600","1200"], c:0, e:"Universal hijack squawk code."},
+{t:"Security", q:"For a non-specific bomb threat, what color classification does the manual suggest?", o:["Red","Yellow","Green","Black"], c:2, e:"Section 3.22.1."},
+{t:"Security", q:"According to the unruly passenger threat levels, what is Level 3?", o:["Disruptive/suspicious behavior","Physically abusive behavior","Life-threatening behavior","Breach of flight crew compartment"], c:2, e:"Appendix A, section 6."},
+{t:"Security", q:"What is Level 4 on the unruly passenger threat scale?", o:["Verbally threatening only","Physically abusive","Life threatening","Attempted or actual breach of the flight crew compartment"], c:3, e:"Appendix A, section 6."},
+{t:"Security", q:"Which convention gives the commander authority over unruly passengers?", o:["Chicago Convention 1944","Tokyo Convention 1963","Montreal Convention 1999","Warsaw Convention 1929"], c:1, e:"Ratified by Kuwait, cited in Appendix A."},
+{t:"Security", q:"What must a CCM do if equipment quantity found exceeds the LOPA listing?", o:["Remove the extra item and dispose of it","Report to the SCCM, who reports it to the PIC","Ignore it since more equipment is safer","Note it in the post-flight report only"], c:1, e:"Confirmed in your Briefing Questionnaire, Q32."},
+
+// Fire specific
+{t:"Fire Fighting", q:"In a lavatory fire, what should the firefighter check before opening the door?", o:["Passenger seat number","Whether the door is hot or cool","Smoke detector battery","Water supply"], c:1, e:"Section 3.7.1."},
+{t:"Fire Fighting", q:"For an overhead bin fire, what is the very first action?", o:["Discharge the extinguisher immediately","Remove passengers seated underneath","Call the captain","Open the bin fully"], c:1, e:"Section 3.8.1, step 1."},
+{t:"Fire Fighting", q:"For an electrical passenger seat fire, what's switched off first?", o:["Cabin lighting","The Pax (IFE) system","Air conditioning","Oxygen system"], c:1, e:"Section 3.9.1 — switch is in the cockpit."},
+{t:"Fire Fighting", q:"What is the FIRST recommended action for an oven fire?", o:["Open the door immediately","Keep the oven door closed","Use water immediately","Evacuate the galley area"], c:1, e:"Section 3.10.1 — opening introduces oxygen, risking a flash fire."},
+{t:"Fire Fighting", q:"What material should smother a clothing fire?", o:["Any available fabric","A non-synthetic coat, blanket, or galley curtain","A synthetic jacket only","Paper towels"], c:1, e:"Section 3.11.1 — synthetics can melt onto skin."},
+{t:"Fire Fighting", q:"After halon on a lithium battery fire, what's done with the device?", o:["Place it in the overhead bin","Submerge it in water or a non-alcoholic beverage","Store it in the galley","Return it to the passenger"], c:1, e:"Section 3.12.1 — prevents reignition."},
+{t:"Fire Fighting", q:"Technique to locate a fire source in a hidden area?", o:["Listen for hissing sounds only","Feel panels with the back of the hand for hot spots","Wait for smoke to clear","Use a flashlight only"], c:1, e:"Section 3.13."},
+{t:"Standard Callouts", q:"What callout does a CCM give once they've located a fire?", o:["\"Halon deployed\"","\"Get me a Halon\"","\"Fire under control\"","\"Extinguisher ready\""], c:1, e:"Handout Abnormal Situation table, item 16."},
+{t:"Standard Callouts", q:"What command redirects passengers when an evacuation exit is blocked?", o:["\"Stand Back\"","\"Go That Way\"","\"Hold Position\"","\"Wait Here\""], c:1, e:"Handout Abnormal Situation table, item 15."},
+
+// Handout policies
+{t:"Policies (Handout)", q:"How many hours before flight duty must crew stop drinking alcohol (incl. wine/beer)?", o:["8 hours","12 hours","24 hours","6 hours"], c:1, e:"Handout Part 2, section 1.2."},
+{t:"Policies (Handout)", q:"How long must a crew member wait after donating blood before flight duty?", o:["24 hours","48 hours","72 hours","1 week"], c:2, e:"Handout Part 2, section 2."},
+{t:"Policies (Handout)", q:"Is bone marrow donation allowed for Jazeera crew?", o:["Yes, with a 72-hour rest period","No, it is not allowed","Yes, with medical clearance only","Only for SCCM"], c:1, e:"Explicit note in Handout Part 2, section 2."},
+{t:"Policies (Handout)", q:"How long must a crew member wait after a general or spinal anesthetic?", o:["12 hours","24 hours","48 hours","72 hours"], c:2, e:"Handout Part 2, section 3."},
+{t:"Policies (Handout)", q:"How long must a crew member wait after a LOCAL anesthetic?", o:["6 hours","12 hours","24 hours","48 hours"], c:1, e:"Handout Part 2, section 3."},
+{t:"Policies (Handout)", q:"Minimum rest after SEVERAL scuba dives in one day?", o:["24 hours","48 hours","12 hours","72 hours"], c:1, e:"Handout Part 2, section 4."},
+{t:"Policies (Handout)", q:"Minimum rest after a single dive requiring decompression?", o:["24 hours","48 hours","12 hours","6 hours"], c:1, e:"Handout Part 2, section 4."},
+{t:"Policies (Handout)", q:"Max infants permitted onboard, per the Special Handling table?", o:["15","20","25","Unlimited"], c:2, e:"Matches the 25 Infant Life Jackets on your EEL charts."},
+{t:"Policies (Handout)", q:"Max Unaccompanied Minors (UM) permitted onboard?", o:["4","6","8","10"], c:2, e:"Handout Special Handling table."},
+{t:"Policies (Handout)", q:"Max wheelchair (WCHC) passengers permitted onboard?", o:["2","4","6","8"], c:1, e:"Handout Special Handling table."},
+{t:"Policies (Handout)", q:"Max blind or deaf passengers permitted onboard?", o:["2","4","6","Unlimited"], c:1, e:"Handout Special Handling table."},
+{t:"Policies (Handout)", q:"Which category is NOT allowed onboard at all?", o:["Wheelchair passenger","Incubator","Unaccompanied minor","Infant"], c:1, e:"Also stretcher and mentally challenged passengers."},
+{t:"Policies (Handout)", q:"Is medical oxygen generally permitted onboard?", o:["Yes, always","Not allowed, except a Portable Oxygen Concentrator (POC)","Only in Business Class","Only with SCCM approval, no exceptions"], c:1, e:"Handout Special Handling table."},
+{t:"Policies (Handout)", q:"Can a stretcher passenger be carried?", o:["Yes, unlimited","Yes, max 1","Not allowed","Only on long-haul"], c:2, e:"Marked NOT ALLOWED in the Handout table."},
+{t:"Passenger Handling", q:"What must crew confirm the ABP understands, per the Over Wing Exit briefing script?", o:["The full safety demo script","How to operate the exit and follow safety instructions","The meal service menu","Boarding pass verification"], c:1, e:"From the Handout's Over Wing Emergency Exit Briefing script."},
+
+// Type 1 vs Type III Doors
+{t:"Type 1 Doors", q:"How many Type I (main) doors does the A320 have in total?", o:["2","4","6","8"], c:1, e:"Two cabin doors on each side (FWD + AFT) = 4 total Type I doors."},
+{t:"Type 1 Doors", q:"How many Type III (over-wing) emergency exits does the A320 have?", o:["2","4","6","8"], c:1, e:"Section 5.9 — four emergency exits, two on each side."},
+{t:"Type 1 Doors", q:"Each Type I door is equipped with what kind of escape slide?", o:["Single lane escape slide","Dual lane escape slide","No slide, ramp only","Triple lane slide raft"], c:0, e:"Section 5.9 — each Type I door has its own single-lane slide."},
+{t:"Type 1 Doors", q:"Each pair of Type III exits shares what kind of escape slide?", o:["Two separate single-lane slides","One dual lane escape slide","No slide at all","A slide raft only"], c:1, e:"Section 5.9 — one dual-lane slide is shared by each pair of Type III exits."},
+{t:"Type 1 Doors", q:"What method do crew follow when arming or disarming a Type 1 door?", o:["LOCK – TURN – CHECK","PIN – LEVER – PIN","ARM – WAIT – CONFIRM","SWITCH – HOLD – RELEASE"], c:1, e:"Section 5.9.3.5 — the standard method for both arming and disarming."},
+{t:"Type 1 Doors", q:"When arming or disarming doors, which side is done first?", o:["LHS doors, then RHS","RHS doors, then LHS","Both sides simultaneously","Whichever door is nearest the SCCM"], c:0, e:"Section 5.9.3.5, explicitly stated."},
+{t:"Type 1 Doors", q:"What callout does the arming crew give to alert the witness crew, before arming?", o:["\"ARMING DOOR\"","\"DOOR READY\"","\"STAND BY DOOR\"","\"CHECK DOOR\""], c:0, e:"Table 1, Step 1 of the arming SOP."},
+{t:"Type 1 Doors", q:"What callout is used before disarming a Type 1 door?", o:["\"DOOR OPEN\"","\"DISARMING DOOR\"","\"SAFE TO OPEN\"","\"DOOR RELEASE\""], c:1, e:"Table 2, Step 1 of the disarming SOP."},
+{t:"Type 1 Doors", q:"What color does the visual indicator show when a Type 1 door is ARMED?", o:["Green","Amber","Red","Blue"], c:2, e:"RED = armed, GREEN = disarmed."},
+{t:"Type 1 Doors", q:"What color does the visual indicator show when a Type 1 door is DISARMED?", o:["Green","Amber","Red","Blue"], c:0, e:"RED = armed, GREEN = disarmed."},
+{t:"Type 1 Doors", q:"If the witness crew sees the arming/disarming crew about to make an unsafe error, what should they shout?", o:["\"WAIT-WAIT-WAIT\"","\"STOP-STOP-STOP\"","\"ERROR-ERROR-ERROR\"","\"HOLD-HOLD-HOLD\""], c:1, e:"Section 5.9.3.5 — said loud and clear, with physical intervention if needed."},
+{t:"Type 1 Doors", q:"Who confirms \"Aft doors ARMED and cross-check complete\" to the SCCM?", o:["CCM R1","CCM L4","The Captain","Ground staff"], c:1, e:"Section 5.9.3.5 — CCM L4 confirms via interphone."},
+{t:"Type 1 Doors", q:"Before opening a Type 1 door in a NORMAL situation, what must two crew members physically check?", o:["Only that the door handle turns smoothly","Slide lever is DISARMED, safety pin fitted, SLIDE ARMED indicator OFF","That passengers are all seated","The fuel gauge reading"], c:1, e:"Section 5.9.3.6, Door Warning — prevents accidental slide deployment."},
+{t:"Type 1 Doors", q:"How long does the door-opening and slide-inflation sequence take at a Type 1 door?", o:["1 second","4 seconds","10 seconds","30 seconds"], c:1, e:"Section 5.10.5, Safety Note D."},
+{t:"Type 1 Doors", q:"Where is the red manual inflation handle located on a Type 1 door?", o:["On the LHS of the girt bar","On the RHS of the girt bar","Above the door frame","Inside the overhead bin"], c:1, e:"Section 5.10.3."},
+{t:"Type 1 Doors", q:"During DITCHING, should crew wait for automatic slide inflation at a Type 1 door?", o:["Yes, always wait for automatic inflation","No — pull the Red Manual Inflation Handle immediately","Only if instructed by the captain","Wait exactly 10 seconds first"], c:1, e:"Section 5.10.5 — explicitly: DO NOT WAIT for automatic inflation during ditching."},
+{t:"Type 1 Doors", q:"At what distance does a Type 1 door's slide begin to auto-inflate after leaving the aircraft?", o:["Approximately 5 inches (13 cm)","Approximately 15 inches (38 cm)","Approximately 30 inches (76 cm)","Approximately 48 inches (122 cm)"], c:1, e:"Section 5.10.5."},
+{t:"Type 1 Doors", q:"To separate a Type 1 door's slide raft from the aircraft (to use as flotation), what must be pulled?", o:["The red manual inflation handle","The white detach (manual release) handle under the girt cover","The door control handle","The frame assist handle"], c:1, e:"Section 5.10.6."},
+{t:"Type 1 Doors", q:"What are the 5 steps to open a Type 1 door in an emergency from inside?", o:["Check slide ARMED, grasp assist handle, lift control handle & release, guard door, monitor inflation","Check slide DISARMED, open slowly, call captain, wait, inflate manually","Push door, jump, inflate, shout, monitor","Unlock, pull, push, hold, release"], c:0, e:"Section 5.10.5, steps 1-5."},
+{t:"Type 1 Doors", q:"Why must crew NOT keep holding the door control handle after lifting it on a Type 1 door?", o:["It will lock the door shut","The pneumatic system opens the door with force and could pull the operator out","It disarms the slide accidentally","It triggers the fire alarm"], c:1, e:"Section 5.10.5, Safety Note B."},
+{t:"Type 1 Doors", q:"What are the pre-flight checks for a Type III (over-wing) exit?", o:["Exit handle cover fitted, Slide Armed indicator not illuminated, opening instructions readable","Only that the seat nearby is empty","Fuel gauge and oxygen check","Slide raft inflation test"], c:0, e:"Section 5.13.1."},
+{t:"Type 1 Doors", q:"What are the steps to open a Type III exit from INSIDE in an emergency?", o:["Push a button, exit collapses automatically","Pull/discard cover flap, grasp handle, pull control handle, pull hatch in/lift/turn, throw hatch outside","Call the SCCM and wait for authorization","Kick the panel until it opens"], c:1, e:"Section 5.13.2, Emergency Opening From Inside."},
+{t:"Type 1 Doors", q:"How is a Type III exit opened from OUTSIDE?", o:["Push the red flap and the exit collapses inside the aircraft","Pull the hatch straight out","Use the same PIN-LEVER-PIN method as Type 1","It cannot be opened from outside"], c:0, e:"Section 5.13.3."},
+{t:"Type 1 Doors", q:"How long does the Type III overwing slide take to inflate once the exit is opened?", o:["1 second","4 seconds","10 seconds","20 seconds"], c:1, e:"Section 5.13.2 — same 4-second timing as the main doors."},
+{t:"Type 1 Doors", q:"Where is the overwing escape slide stowed?", o:["Inside the overhead bin above the exit","In the wing/fuselage fairing aft of the overwing exits","Under the passenger seat","In the cockpit"], c:1, e:"Section 5.13.4."},
+{t:"Type 1 Doors", q:"Can the Type III overwing slide be disconnected from the aircraft and used as a flotation device?", o:["Yes, exactly like the Type 1 slide raft","No — it cannot be disconnected or used as flotation","Only in a ditching scenario","Only if manually inflated"], c:1, e:"Section 5.13.5 — an important distinction from the Type 1 slide raft."},
+{t:"Type 1 Doors", q:"In a GROUND evacuation, what command is given to passengers leaving via an overwing exit?", o:["\"Jump and Slide\"","\"Run And Slide\"","\"Stand and Wait\"","\"Climb Down\""], c:1, e:"Section 5.13.2, Note A."},
+{t:"Type 1 Doors", q:"In a DITCHING evacuation, what command is given at an overwing exit?", o:["\"Jump and Slide\"","\"Inflate Lifejacket On The Wing And Get Into The Water\"","\"Run And Slide\"","\"Wait For Rescue\""], c:1, e:"Section 5.13.2, Note B."},
+{t:"Type 1 Doors", q:"If the overwing slide is damaged or fails to inflate, how many ABPs are needed to hold it by the no-fail handles?", o:["Two","Three","Four","Six"], c:2, e:"Section 5.13.7."},
+{t:"Type 1 Doors", q:"What must an ABP locate to secure a damaged overwing slide as a handhold?", o:["The girt bar","The snap hook, fixed to the wing attachment point","The manual release handle","The frame assist handle"], c:1, e:"Section 5.13.7."},
+{t:"Type 1 Doors", q:"What is the correct exit technique to avoid injury when leaving via an overwing exit?", o:["Dive out head-first","One leg out first, bend to bring trunk/hips out, head drawn out last","Jump feet-first with arms raised","Crawl out backwards"], c:1, e:"Section 5.13.8(a)."},
+{t:"Type 1 Doors", q:"What is the ideal ground evacuation route from an overwing exit?", o:["Forward toward the nose","AFT on the non-skid wing surface to the dual-lane ramp/slide","Straight down off the wing edge","Through the cabin to a main door"], c:1, e:"Section 5.13.8(b)."},
+{t:"Type 1 Doors", q:"When should the overwing exit hatch be removed in an emergency landing or ditching?", o:["As soon as the seatbelt sign turns off","Only after the aircraft has finally stopped","Immediately on the captain's first PA","Before touchdown, in anticipation"], c:1, e:"Section 5.13.8(c)."},
+{t:"Type 1 Doors", q:"Why is the cover over the Type III emergency exit handle important?", o:["It's just cosmetic","It prevents the handle from being mistaken for/used as a handhold","It keeps the handle clean","It's a weight-saving measure"], c:1, e:"Section 5.13.8(c), Safety Notes."},
+
+// Emergency Landing Types
+{t:"Emergency Landing", q:"When does an \"Unplanned Emergency with a Little Time\" typically occur?", o:["Only during cruise","Immediately after take-off, or after V1 where takeoff continued","Only during taxi before departure","Only during final descent"], c:1, e:"Section 3.20.4.1.2, explicitly stated."},
+{t:"Emergency Landing", q:"Roughly how much advance warning does cabin crew have before impact in an Unplanned Emergency With A Little Time?", o:["About 10 seconds","About 1 minute","About 5 minutes","About 15 minutes"], c:1, e:"Section 3.20.4.1.2 — 'Approximately one minute prior to impact.'"},
+{t:"Emergency Landing", q:"How many orders does cabin crew receive from the flight crew in an Unplanned Emergency With A Little Time?", o:["3","4","5","7"], c:2, e:"Section 3.20.4.1.2 lists exactly 5 sequential orders."},
+{t:"Emergency Landing", q:"What is the FIRST of the 5 orders in an Unplanned Emergency With A Little Time?", o:["\"Brace For The Impact\"","\"We Are Returning Back To The Air Field, Prepare For Emergency Landing\"","\"Finish Preparation\"","\"Evacuate, Evacuate\""], c:1, e:"Section 3.20.4.1.2, order 1 — cabin crew go to demo positions and demonstrate the brace position."},
+{t:"Emergency Landing", q:"What must cabin crew do upon hearing \"Finish Preparation\"?", o:["Start meal service","Proceed immediately to jump seats and strap in","Open all exits","Call the cockpit for confirmation"], c:1, e:"Section 3.20.4.1.2, order 2."},
+{t:"Emergency Landing", q:"What must cabin crew shout upon hearing \"Brace For The Impact\"?", o:["\"Evacuate, Evacuate!\"","\"Brace – Brace, Heads Down! Stay Down!\"","\"Hold on tight!\"","\"Prepare for landing!\""], c:1, e:"Section 3.20.4.1.2, order 3 — crew also assume the brace position themselves."},
+{t:"Emergency Landing", q:"In a PLANNED Emergency, what is the very first order, and who is it directed to?", o:["\"Brace, Brace\" — to all passengers","\"Purser to Cockpit Please\" — to the SCCM","\"Finish Preparation\" — to all crew","\"Cabin Secure\" — to the Captain"], c:1, e:"Section 3.20.4.2.1 — this is what distinguishes Planned from Unplanned scenarios: there's time for a full NITS briefing first."},
+{t:"Emergency Landing", q:"What's the key distinguishing factor of \"Unplanned – No Time\" vs \"Unplanned – Little Time\" emergencies?", o:["No Time gives essentially zero preparation window; Little Time gives ~1 minute and 5 sequential orders","They are identical procedures","No Time only applies to water landings","Little Time only applies to fire emergencies"], c:0, e:"No Time = e.g. rejected takeoff/immediate ground event. Little Time = occurs after takeoff/V1, with ~1 minute to prepare."},
+{t:"Emergency Landing", q:"If the captain knows which exits are safe during an evacuation, how is the command phrased?", o:["\"Evacuate everyone now\"","\"Left side evacuate\" or \"Right side evacuate\"","\"Use exits 1 and 4 only\"","\"Follow crew instructions\""], c:1, e:"Section 3.20.4.1.2 — the side is named specifically."},
+{t:"Emergency Landing", q:"Before opening an exit during evacuation, what must cabin crew confirm about the area below?", o:["That ground staff are present","It's free of smoke, fire, obstacles, and debris","That the captain has personally verified it","That all passengers are already standing"], c:1, e:"Section 3.20.4.1.2."},
+{t:"Emergency Landing", q:"Where should cabin crew position themselves while opening an exit during evacuation, and why?", o:["Directly in the doorway, to block the exit","Holding the Frame Assist Handle in the assist space beside the door, to avoid being pushed overboard","Behind the last row of seats","In the galley, monitoring from a distance"], c:1, e:"Section 3.20.4.1.2 — protects crew from a rush of passengers."}
+];
+
+let order = QUESTIONS.map((_,i)=>i);
+let idx = 0;
+let score = 0;
+let missed = [];
+let answered = false;
+
+const promptEl = document.getElementById('prompt');
+const optionsEl = document.getElementById('options');
+const explainEl = document.getElementById('explain');
+const nextBtn = document.getElementById('nextBtn');
+const fillEl = document.getElementById('fill');
+const qcountEl = document.getElementById('qcount');
+const scorevalEl = document.getElementById('scoreval');
+const topicTag = document.getElementById('topicTag');
+const quizArea = document.getElementById('quizArea');
+const doneArea = document.getElementById('doneArea');
+
+function renderQuestion(){
+  answered = false;
+  const qi = order[idx];
+  const item = QUESTIONS[qi];
+  topicTag.textContent = item.t;
+  promptEl.textContent = item.q;
+  optionsEl.innerHTML = '';
+  explainEl.style.display = 'none';
+  explainEl.innerHTML = '';
+  nextBtn.style.display = 'none';
+
+  item.o.forEach((optText, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = optText;
+    b.onclick = () => selectAnswer(i, item, b);
+    optionsEl.appendChild(b);
+  });
+
+  qcountEl.textContent = `Question ${idx+1} / ${QUESTIONS.length}`;
+  fillEl.style.width = ((idx)/QUESTIONS.length*100) + '%';
+  scorevalEl.textContent = score;
+}
+
+function selectAnswer(i, item, btnEl){
+  if(answered) return;
+  answered = true;
+  const allBtns = optionsEl.querySelectorAll('.opt');
+  allBtns.forEach((b, bi) => {
+    b.disabled = true;
+    if(bi === item.c) b.classList.add('correct');
+    else if(bi === i) b.classList.add('wrong');
+  });
+  if(i === item.c){
+    score++;
+  } else {
+    missed.push({q:item.q, correct:item.o[item.c]});
+  }
+  scorevalEl.textContent = score;
+  explainEl.innerHTML = '<b>' + (i===item.c ? 'Correct. ' : 'Not quite. ') + '</b>' + item.e;
+  explainEl.style.display = 'block';
+  nextBtn.style.display = 'inline-block';
+  nextBtn.textContent = (idx === QUESTIONS.length-1) ? 'See Results' : 'Next Question';
+}
+
+nextBtn.onclick = () => {
+  idx++;
+  if(idx >= QUESTIONS.length){
+    showResults();
+  } else {
+    renderQuestion();
+  }
+};
+
+function showResults(){
+  quizArea.style.display = 'none';
+  doneArea.style.display = 'block';
+  fillEl.style.width = '100%';
+  document.getElementById('finalScore').textContent = score + ' / ' + QUESTIONS.length;
+  const list = document.getElementById('missedList');
+  if(missed.length === 0){
+    list.innerHTML = '<p style="color:var(--good);text-align:center;">Perfect run. Nothing missed.</p>';
+  } else {
+    list.innerHTML = '<h3>Review these before your exam:</h3>' + missed.map(m =>
+      `<div class="missed-item">${m.q}<br><b>${m.correct}</b></div>`
+    ).join('');
+  }
+}
+
+document.getElementById('restartBtn').onclick = () => {
+  idx = 0; score = 0; missed = [];
+  order = QUESTIONS.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [order[i],order[j]] = [order[j],order[i]];
+  }
+  doneArea.style.display = 'none';
+  quizArea.style.display = 'block';
+  renderQuestion();
+};
+
+renderQuestion();
+</script>
+</body>
+</html>
